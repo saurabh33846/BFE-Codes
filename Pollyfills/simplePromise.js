@@ -13,9 +13,11 @@ class SimplePromise{
 
     then(handleSuccess) {
         this.promiseChain.push(handleSuccess);
+        return this;
     }
     catch(handleError) {
         this.handleError = handleError;
+        return this
     }
     onResolve(value){
         let storeValue = value;
