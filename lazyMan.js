@@ -12,49 +12,44 @@
  */
 function LazyMan(name, logFn) {
   // your code here
-  let outcomeA = [];
-    outcomeA.push(Promise.resolve({value:`Hi, I'm ${name}`}))
+  let tasks = [];
+
   setTimeout(async ()=>{
-    for (const prom of outcomeA) {
-      let {value} = await prom;
-      logFn.apply(this, [value])
+    for(const task of tasks) {
+      let result = await task();
+      logFn(result);
     }
   }, 0)
 
-  let op =  {
-    eat:function(dishName){
-      outcomeA.push(Promise.resolve({
-        value:`Eat ${dishName}`,
-        async: false
-      }))
+  let op = {
+    eat:function (dish){
+      tasks.push(eatTask(dish));
       return this;
     },
-    sleep :function(time){
-      outcomeA.push(resolveWithDelay(time, {value:`Wake up after ${time} seconds`}))
+    sleep:function (time){
+      tasks.push(sleepTask(time))
       return this;
     },
-    sleepFirst:function(time){
-        outcomeA.splice(0, 0,resolveWithDelay(time, {value:`Wake up after ${time} seconds`}))
+    sleepFirst: function(time){
+        
+      tasks.unshift(sleepTask(time));
       return this;
     }
+
+  }
+  function eatTask(dish) {
+    return ()=> Promise.resolve(`Eat ${dish}`)
+  }
+  function sleepTask(time) {
+    return ()=>{
+    return new Promise((resolve, reject)=>{
+      setTimeout(()=>{
+        resolve(`Wake up after ${time}`)
+      }, time)
+    }) 
+  }
   }
   return op;
 }
-function resolveWithDelay(delay, value) {
-  return new Promise((resolve, reject)=>{
-    setTimeout(()=>{
-      resolve(value)
-    }, delay)
-  })
-}
 
-const log = (str) => {
-  log.logs.push(str)
-}
-log.logs = []
-LazyMan('Jack', log).eat('banana').eat('apple')
-// Hi, I'm Jack.
-// setTimeout(() => {
-//   expect(log.logs.slice()).toEqual(["Hi, I'm Jack."])
-//   done()
-// }, 0)
+LazyMan('Jack', console.log).eat('banana').sleep(2000).eat('apple').sleep(3000).eat('Saurabh').sleepFirst(1000);
